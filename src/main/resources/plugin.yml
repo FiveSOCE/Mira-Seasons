@@ -1,0 +1,16 @@
+name: MiraSeasons
+version: ${version}
+main: com.mira.seasons.MiraSeasonsPlugin
+api-version: '1.21'
+author: FiveS
+softdepend: [PlaceholderAPI]
+commands:
+  season:
+    description: View the current Mira season
+    usage: /season
+  mseason:
+    description: Manage Mira seasons
+    usage: /mseason <start|end|winner|list|reload>
+permissions:
+  miraseasons.admin:
+    default: op
