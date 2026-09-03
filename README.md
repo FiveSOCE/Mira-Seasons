@@ -1,62 +1,36 @@
 # MiraSeasons
 
-Server-wide season lifecycle source of truth for the Mira Paper 1.21.11 / Java 21 ecosystem.
+MiraSeasons is the server-wide season lifecycle system for the Mira Paper server suite. It provides one authoritative active season, persistent start/end times, archived completed seasons and winner records for other Mira systems to reference.
 
 ## Download
 
-Current release: **v0.1.0**
-
 [**Download MiraSeasons v0.1.0**](https://github.com/FiveSOCE/Mira-Seasons/releases/download/v0.1.0/MiraSeasons-0.1.0.jar)
 
-[View all releases](https://github.com/FiveSOCE/Mira-Seasons/releases)
-
-## Features
-
-- one active server season at a time
-- persistent start/end timestamps
-- automatic season expiry
-- archived completed seasons
-- winner records
-- `/season` player status command
-- `/mseason start <id> <duration> [display name]`
-- `/mseason end [id]`
-- `/mseason winner <name>`
-- `/mseason list`
-- PlaceholderAPI support
-- public `MiraSeasonsApi` through Bukkit ServicesManager
-
-## PlaceholderAPI
-
-```text
-%miraseasons_id%
-%miraseasons_name%
-%miraseasons_active%
-%miraseasons_remaining%
-%miraseasons_ends_at%
-```
-
-## Data
-
-Season history and current state are stored in:
-
-```text
-plugins/MiraSeasons/seasons.yml
-```
-
-## Requirements
+## Requirements / Dependencies
 
 - Paper 1.21.11
 - Java 21
 - PlaceholderAPI optional
 
-## Building
+## How MiraSeasons Works
 
-```bash
-gradle clean build
-```
+Only one server season is active at a time. A season is started with an ID, duration and optional display name. MiraSeasons persists its start/end timestamps, automatically detects season expiry, archives completed seasons and stores declared winners. Other plugins can consume the public `MiraSeasonsApi` or PlaceholderAPI values instead of maintaining separate season clocks.
 
-Output:
+Current and historical season data is stored in `plugins/MiraSeasons/seasons.yml`.
 
-```text
-build/libs/MiraSeasons-0.1.0.jar
-```
+## Commands
+
+| Command | Permission | What it does |
+| --- | --- | --- |
+| `/season` | None required | Shows the current season and remaining time. |
+| `/mseason start <id> <duration> [display name]` | `miraseasons.admin` | Starts a new server season. |
+| `/mseason end [id]` | `miraseasons.admin` | Ends the active season or specified season. |
+| `/mseason winner <name>` | `miraseasons.admin` | Records a winner for the current season. |
+| `/mseason list` | `miraseasons.admin` | Lists season records/history. |
+| `/mseason reload` | `miraseasons.admin` | Reloads MiraSeasons configuration/data where supported. |
+
+## Permissions
+
+| Permission | Default | What it does |
+| --- | --- | --- |
+| `miraseasons.admin` | OP | Allows creating, ending and administering seasons. |
