@@ -18,6 +18,7 @@ import java.time.Duration;
 import java.util.*;
 
 public final class MiraSeasonsPlugin extends JavaPlugin {
+    private static final String PREFIX = "&5&lMira &8>> &r";
     private SeasonService seasons;
 
     @Override
@@ -42,26 +43,26 @@ public final class MiraSeasonsPlugin extends JavaPlugin {
         if (command.getName().equalsIgnoreCase("season")) {
             Season current = seasons.current().orElse(null);
             if (current == null) {
-                sender.sendMessage(c("&7No season is currently active."));
+                msg(sender, "&7No season is currently active.");
                 return true;
             }
-            sender.sendMessage(c("&6&l" + current.name()));
-            sender.sendMessage(c("&7ID: &f" + current.id()));
-            sender.sendMessage(c("&7Ends: &f" + formatDuration(Math.max(0, current.endsAt() - System.currentTimeMillis()))));
-            if (!current.winners().isEmpty()) sender.sendMessage(c("&7Winners: &f" + String.join(", ", current.winners())));
+            msg(sender, "&6&l" + current.name());
+            msg(sender, "&7ID: &f" + current.id());
+            msg(sender, "&7Ends: &f" + formatDuration(Math.max(0, current.endsAt() - System.currentTimeMillis())));
+            if (!current.winners().isEmpty()) msg(sender, "&7Winners: &f" + String.join(", ", current.winners()));
             return true;
         }
 
         if (!sender.hasPermission("miraseasons.admin")) {
-            sender.sendMessage(c("&cYou do not have permission."));
+            msg(sender, "&cYou do not have permission.");
             return true;
         }
         if (args.length == 0) {
-            sender.sendMessage(c("&e/mseason start <id> <duration> [display name]"));
-            sender.sendMessage(c("&e/mseason end [id]"));
-            sender.sendMessage(c("&e/mseason winner <name>"));
-            sender.sendMessage(c("&e/mseason list"));
-            sender.sendMessage(c("&e/mseason reload"));
+            msg(sender, "&e/mseason start <id> <duration> [display name]");
+            msg(sender, "&e/mseason end [id]");
+            msg(sender, "&e/mseason winner <name>");
+            msg(sender, "&e/mseason list");
+            msg(sender, "&e/mseason reload");
             return true;
         }
 
@@ -70,36 +71,44 @@ public final class MiraSeasonsPlugin extends JavaPlugin {
                 if (args.length < 3) return false;
                 long duration = parseDuration(args[2]);
                 if (duration <= 0) {
-                    sender.sendMessage(c("&cUse a duration such as 7d, 12h or 30m."));
+                    msg(sender, "&cUse a duration such as 7d, 12h or 30m.");
                     return true;
                 }
                 String name = args.length >= 4 ? String.join(" ", Arrays.copyOfRange(args, 3, args.length)) : args[1];
                 Season season = seasons.start(args[1], name, duration);
-                Bukkit.broadcastMessage(c("&6&lSeason Started &8» &f" + season.name()));
+                broadcast("&6&lSeason Started &8» &f" + season.name());
             }
             case "end" -> {
                 Season ended = seasons.end(args.length >= 2 ? args[1] : null).orElse(null);
-                if (ended == null) sender.sendMessage(c("&cNo matching active season."));
-                else Bukkit.broadcastMessage(c("&6&lSeason Ended &8» &f" + ended.name()));
+                if (ended == null) msg(sender, "&cNo matching active season.");
+                else broadcast("&6&lSeason Ended &8» &f" + ended.name());
             }
             case "winner" -> {
                 if (args.length < 2) return false;
-                if (!seasons.addWinner(String.join(" ", Arrays.copyOfRange(args, 1, args.length)))) sender.sendMessage(c("&cNo active season."));
-                else sender.sendMessage(c("&aSeason winner recorded."));
+                if (!seasons.addWinner(String.join(" ", Arrays.copyOfRange(args, 1, args.length)))) msg(sender, "&cNo active season.");
+                else msg(sender, "&aSeason winner recorded.");
             }
             case "list" -> {
-                sender.sendMessage(c("&6Mira Seasons"));
+                msg(sender, "&6Mira Seasons");
                 for (Season season : seasons.all()) {
-                    sender.sendMessage(c((season.active() ? "&a" : "&7") + season.id() + " &8- &f" + season.name() + (season.active() ? " &aACTIVE" : "")));
+                    msg(sender, (season.active() ? "&a" : "&7") + season.id() + " &8- &f" + season.name() + (season.active() ? " &aACTIVE" : ""));
                 }
             }
             case "reload" -> {
                 seasons.load();
-                sender.sendMessage(c("&aMiraSeasons reloaded."));
+                msg(sender, "&aMiraSeasons reloaded.");
             }
-            default -> sender.sendMessage(c("&cUnknown subcommand."));
+            default -> msg(sender, "&cUnknown subcommand.");
         }
         return true;
+    }
+
+    private void msg(CommandSender sender, String raw) {
+        sender.sendMessage(c(getConfig().getString("messages.prefix", PREFIX) + raw));
+    }
+
+    private void broadcast(String raw) {
+        Bukkit.broadcastMessage(c(getConfig().getString("messages.prefix", PREFIX) + raw));
     }
 
     static String c(String s) { return ChatColor.translateAlternateColorCodes('&', s); }
@@ -196,7 +205,7 @@ public final class MiraSeasonsPlugin extends JavaPlugin {
             Season cur = currentRaw().orElse(null);
             if (cur != null && cur.endsAt() > 0 && cur.endsAt() <= System.currentTimeMillis()) {
                 end(cur.id());
-                Bukkit.broadcastMessage(c("&6&lSeason Ended &8» &f" + cur.name()));
+                plugin.broadcast("&6&lSeason Ended &8» &f" + cur.name());
             }
         }
 
