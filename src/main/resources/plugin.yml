@@ -3,6 +3,7 @@ version: ${version}
 main: com.mira.seasons.MiraSeasonsPlugin
 api-version: '1.21'
 author: FiveS
+depend: [MiraCore]
 softdepend: [PlaceholderAPI]
 commands:
   season:
