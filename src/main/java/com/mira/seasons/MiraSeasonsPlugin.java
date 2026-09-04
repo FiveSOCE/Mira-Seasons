@@ -84,6 +84,14 @@ public final class MiraSeasonsPlugin extends JavaPlugin {
         switch (args[0].toLowerCase(Locale.ROOT)) {
             case "start" -> {
                 if (args.length < 3) return false;
+                if (!args[1].matches("[A-Za-z0-9_-]{1,48}")) {
+                    msg(sender, "&cSeason IDs may only contain letters, numbers, underscores and hyphens.");
+                    return true;
+                }
+                if (seasons.get(args[1]).isPresent()) {
+                    msg(sender, "&cThat season ID already exists in the archive. Use a new ID.");
+                    return true;
+                }
                 long duration = parseDuration(args[2]);
                 if (duration <= 0) {
                     msg(sender, "&cUse a duration such as 7d, 12h or 30m.");
@@ -172,7 +180,7 @@ public final class MiraSeasonsPlugin extends JavaPlugin {
                 case 'w' -> Duration.ofDays(n * 7).toMillis();
                 default -> -1;
             };
-        } catch (NumberFormatException e) { return -1; }
+        } catch (RuntimeException e) { return -1; }
     }
 
     public interface MiraSeasonsApi {
