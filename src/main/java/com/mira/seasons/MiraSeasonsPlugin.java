@@ -91,17 +91,42 @@ public final class MiraSeasonsPlugin extends JavaPlugin {
                 }
                 String name = args.length >= 4 ? String.join(" ", Arrays.copyOfRange(args, 3, args.length)) : args[1];
                 Season season = seasons.start(args[1], name, duration);
+                core.audit().record("MiraSeasons", "SEASON_STARTED",
+                        sender instanceof org.bukkit.entity.Player player ? player.getUniqueId() : null,
+                        sender.getName(), season.id(), "Started season",
+                        Map.of("name", season.name(), "endsAt", Long.toString(season.endsAt())));
                 broadcast("&6&lSeason Started &8» &f" + season.name());
             }
             case "end" -> {
                 Season ended = seasons.end(args.length >= 2 ? args[1] : null).orElse(null);
-                if (ended == null) msg(sender, "&cNo matching active season.");
-                else broadcast("&6&lSeason Ended &8» &f" + ended.name());
+                if (ended == null) {
+                    msg(sender, "&cNo matching active season.");
+                } else {
+                    core.audit().record("MiraSeasons", "SEASON_ENDED",
+                            sender instanceof org.bukkit.entity.Player player ? player.getUniqueId() : null,
+                            sender.getName(), ended.id(), "Ended season", Map.of("name", ended.name()));
+                    broadcast("&6&lSeason Ended &8» &f" + ended.name());
+                }
             }
             case "winner" -> {
                 if (args.length < 2) return false;
-                if (!seasons.addWinner(String.join(" ", Arrays.copyOfRange(args, 1, args.length)))) msg(sender, "&cNo active season.");
-                else msg(sender, "&aSeason winner recorded.");
+                String winnerName = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+                Season current = seasons.current().orElse(null);
+                if (current == null || !seasons.addWinner(winnerName)) {
+                    msg(sender, "&cNo active season.");
+                    break;
+                }
+
+                OfflinePlayer winner = Bukkit.getOfflinePlayer(winnerName);
+                if (winner.isOnline() || winner.hasPlayedBefore()) {
+                    core.milestones().award(winner.getUniqueId(), "season." + current.id() + ".champion",
+                            "MiraSeasons", Map.of("season", current.id(), "seasonName", current.name()));
+                }
+                core.audit().record("MiraSeasons", "SEASON_WINNER_RECORDED",
+                        sender instanceof org.bukkit.entity.Player player ? player.getUniqueId() : null,
+                        sender.getName(), current.id(), "Recorded season winner",
+                        Map.of("winner", winnerName));
+                msg(sender, "&aSeason winner recorded.");
             }
             case "list" -> {
                 msg(sender, "&6Mira Seasons");
