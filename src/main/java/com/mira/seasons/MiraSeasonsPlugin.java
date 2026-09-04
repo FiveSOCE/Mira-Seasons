@@ -1,5 +1,10 @@
 package com.mira.seasons;
 
+import com.mira.core.api.MiraCore;
+import com.mira.core.api.MiraCoreProvider;
+import com.mira.core.api.ModuleHealth;
+import com.mira.seasons.api.event.MiraSeasonEndedEvent;
+import com.mira.seasons.api.event.MiraSeasonStartedEvent;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -19,13 +24,19 @@ import java.util.*;
 
 public final class MiraSeasonsPlugin extends JavaPlugin {
     private static final String PREFIX = "&5&lMira &8>> &r";
+    private MiraCore core;
     private SeasonService seasons;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
+        core = MiraCoreProvider.require();
         seasons = new SeasonService(this);
         getServer().getServicesManager().register(MiraSeasonsApi.class, seasons, this, ServicePriority.Normal);
+        core.modules().register(this, "MiraSeasons");
+        core.services().register(MiraSeasonsApi.class, seasons);
+        core.modules().setHealth(this, ModuleHealth.HEALTHY,
+                "Authoritative season lifecycle, archive, winner milestones and placeholders ready");
         if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) new SeasonPlaceholders(this).register();
         Objects.requireNonNull(getCommand("season")).setExecutor(this);
         Objects.requireNonNull(getCommand("mseason")).setExecutor(this);
@@ -36,6 +47,10 @@ public final class MiraSeasonsPlugin extends JavaPlugin {
     public void onDisable() {
         if (seasons != null) seasons.save();
         getServer().getServicesManager().unregisterAll(this);
+        if (core != null) {
+            if (seasons != null) core.services().unregister(MiraSeasonsApi.class, seasons);
+            core.modules().unregister(this);
+        }
     }
 
     @Override
