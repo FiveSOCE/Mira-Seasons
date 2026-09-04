@@ -151,6 +151,34 @@ public final class MiraSeasonsPlugin extends JavaPlugin {
         return true;
     }
 
+    @Override
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command,
+                                      @NotNull String alias, @NotNull String[] args) {
+        if (!command.getName().equalsIgnoreCase("mseason") || !sender.hasPermission("miraseasons.admin")) {
+            return List.of();
+        }
+        if (args.length == 1) {
+            return complete(args[0], List.of("start", "end", "winner", "list", "reload"));
+        }
+        if (args.length == 2 && args[0].equalsIgnoreCase("end")) {
+            return complete(args[1], seasons.all().stream().filter(Season::active).map(Season::id).toList());
+        }
+        if (args.length == 2 && args[0].equalsIgnoreCase("winner")) {
+            return complete(args[1], Bukkit.getOnlinePlayers().stream().map(org.bukkit.entity.Player::getName).toList());
+        }
+        if (args.length == 3 && args[0].equalsIgnoreCase("start")) {
+            return complete(args[2], List.of("30m", "1h", "12h", "1d", "7d", "4w"));
+        }
+        return List.of();
+    }
+
+    private static List<String> complete(String prefix, Collection<String> values) {
+        String lower = prefix == null ? "" : prefix.toLowerCase(Locale.ROOT);
+        return values.stream()
+                .filter(value -> value.toLowerCase(Locale.ROOT).startsWith(lower))
+                .distinct().sorted().toList();
+    }
+
     private void msg(CommandSender sender, String raw) {
         sender.sendMessage(c(getConfig().getString("messages.prefix", PREFIX) + raw));
     }
@@ -298,12 +326,20 @@ public final class MiraSeasonsPlugin extends JavaPlugin {
         @Override public boolean persist() { return true; }
         @Override public @Nullable String onRequest(OfflinePlayer player, @NotNull String params) {
             Season s = plugin.seasons.current().orElse(null);
+            Season last = plugin.seasons.all().stream().filter(season -> !season.active()).findFirst().orElse(null);
             return switch (params.toLowerCase(Locale.ROOT)) {
                 case "id" -> s == null ? "" : s.id();
                 case "name" -> s == null ? "No Season" : s.name();
                 case "active" -> Boolean.toString(s != null);
                 case "remaining" -> s == null ? "0m" : formatDuration(plugin.seasons.remainingMillis());
+                case "starts_at" -> s == null ? "0" : Long.toString(s.startsAt());
                 case "ends_at" -> s == null ? "0" : Long.toString(s.endsAt());
+                case "winner_count" -> s == null ? "0" : Integer.toString(s.winners().size());
+                case "winners" -> s == null ? "" : String.join(", ", s.winners());
+                case "last_id" -> last == null ? "" : last.id();
+                case "last_name" -> last == null ? "" : last.name();
+                case "last_winner_count" -> last == null ? "0" : Integer.toString(last.winners().size());
+                case "last_winners" -> last == null ? "" : String.join(", ", last.winners());
                 default -> null;
             };
         }
