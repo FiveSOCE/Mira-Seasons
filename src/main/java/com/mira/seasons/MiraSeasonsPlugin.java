@@ -212,22 +212,30 @@ public final class MiraSeasonsPlugin extends JavaPlugin {
         }
 
         synchronized Season start(String id, String name, long durationMillis) {
-            current().ifPresent(s -> end(s.id()));
+            current().ifPresent(existing -> end(existing.id(), MiraSeasonEndedEvent.Reason.REPLACED));
             long now = System.currentTimeMillis();
             Season season = new Season(id, name, now, now + durationMillis, true, new ArrayList<>());
             records.put(id.toLowerCase(Locale.ROOT), season);
             currentId = id;
             save();
+            Bukkit.getPluginManager().callEvent(new MiraSeasonStartedEvent(
+                    season.id(), season.name(), season.startsAt(), season.endsAt()));
             return season;
         }
 
         synchronized Optional<Season> end(@Nullable String id) {
+            return end(id, MiraSeasonEndedEvent.Reason.MANUAL);
+        }
+
+        synchronized Optional<Season> end(@Nullable String id, MiraSeasonEndedEvent.Reason reason) {
             Season target = id == null ? current().orElse(null) : get(id).orElse(null);
             if (target == null || !target.active()) return Optional.empty();
-            Season ended = new Season(target.id(), target.name(), target.startsAt(), Math.min(System.currentTimeMillis(), target.endsAt()), false, new ArrayList<>(target.winners()));
+            Season ended = new Season(target.id(), target.name(), target.startsAt(),
+                    Math.min(System.currentTimeMillis(), target.endsAt()), false, new ArrayList<>(target.winners()));
             records.put(target.id().toLowerCase(Locale.ROOT), ended);
             if (currentId != null && currentId.equalsIgnoreCase(target.id())) currentId = null;
             save();
+            Bukkit.getPluginManager().callEvent(new MiraSeasonEndedEvent(ended.id(), ended.name(), reason));
             return Optional.of(ended);
         }
 
@@ -244,7 +252,9 @@ public final class MiraSeasonsPlugin extends JavaPlugin {
         private synchronized void expireIfNeeded() {
             Season cur = currentRaw().orElse(null);
             if (cur != null && cur.endsAt() > 0 && cur.endsAt() <= System.currentTimeMillis()) {
-                end(cur.id());
+                end(cur.id(), MiraSeasonEndedEvent.Reason.EXPIRED);
+                plugin.core.audit().record("MiraSeasons", "SEASON_EXPIRED", null, "scheduler",
+                        cur.id(), "Season expired", Map.of("name", cur.name()));
                 plugin.broadcast("&6&lSeason Ended &8» &f" + cur.name());
             }
         }
