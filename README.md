@@ -4,7 +4,7 @@ MiraSeasons is the server-wide season lifecycle system for the Mira Paper server
 
 ## Download
 
-[**Download MiraSeasons v0.1.1**](https://github.com/FiveSOCE/Mira-Seasons/releases/download/v0.1.1/MiraSeasons-0.1.1.jar)
+[**Download MiraSeasons v0.1.1**](https://github.com/FiveSOCE/Mira-Seasons/releases/download/v0.1.2/MiraSeasons-0.1.2.jar)
 
 ## Requirements / Dependencies
 
