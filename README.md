@@ -1,10 +1,14 @@
 # MiraSeasons
 
-MiraSeasons is the server-wide season lifecycle system for the Mira Paper server suite. It provides one authoritative active season, persistent start/end times, archived completed seasons and winner records for other Mira systems to reference.
-
 ## Download
 
-[**Download MiraSeasons v0.1.1**](https://github.com/FiveSOCE/Mira-Seasons/releases/download/v0.1.2/MiraSeasons-0.1.2.jar)
+**Latest compatibility release: v0.1.2**
+
+[**Download MiraSeasons-0.1.2.jar**](https://github.com/FiveSOCE/Mira-Seasons/releases/download/v0.1.2/MiraSeasons-0.1.2.jar)
+
+[View all releases](https://github.com/FiveSOCE/Mira-Seasons/releases)
+
+MiraSeasons is the server-wide season lifecycle system for the Mira Paper server suite. It provides one authoritative active season, persistent start/end times, archived completed seasons and winner records for other Mira systems to reference.
 
 ## Requirements / Dependencies
 
